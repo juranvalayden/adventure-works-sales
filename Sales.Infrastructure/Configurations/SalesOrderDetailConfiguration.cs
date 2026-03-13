@@ -10,7 +10,6 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
     {
         builder.ToTable("SalesOrderDetail");
 
-        // Primary Key
         builder.HasKey(d => d.Id)
             .HasName("PK_SalesOrderDetail");
 
@@ -55,7 +54,6 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
             .HasColumnType("datetime")
             .HasPrecision(7);
 
-        // Relationship: Each detail belongs to one SalesOrderHeader
         builder.HasOne(d => d.SalesOrderHeader)
             .WithMany(h => h.SalesOrderDetails)
             .HasForeignKey(d => d.SalesOrderHeaderId);

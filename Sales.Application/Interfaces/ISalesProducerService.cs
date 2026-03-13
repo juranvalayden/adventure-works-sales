@@ -1,8 +1,8 @@
-﻿using Sales.Domain.Entities;
+﻿using Sales.Application.Dtos;
 
 namespace Sales.Application.Interfaces;
 
 public interface ISalesProducerService
 {
-    Task<bool> PublishAsync(SalesOrderHeader? saleOrderHeaderDto, CancellationToken cancellationToken = default);
+    Task<bool> PublishAsync(SalesOrderHeaderDto saleOrderHeaderDto, CancellationToken cancellationToken = default);
 }

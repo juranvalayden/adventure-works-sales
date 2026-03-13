@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
-using Sales.Domain.Entities;
 
 namespace Sales.Application.Services;
 
-internal class SalesProducerService : ISalesProducerService
+public class SalesProducerService : ISalesProducerService
 {
     private readonly ILogger<SalesProducerService> _logger;
 
@@ -13,7 +13,7 @@ internal class SalesProducerService : ISalesProducerService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<bool> PublishAsync(SalesOrderHeader? saleOrderHeaderDto, CancellationToken cancellationToken = default)
+    public async Task<bool> PublishAsync(SalesOrderHeaderDto saleOrderHeaderDto, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Publishing SalesOrderHeader: {Id}", saleOrderHeaderDto.Id);
         await Task.Delay(1000, cancellationToken);

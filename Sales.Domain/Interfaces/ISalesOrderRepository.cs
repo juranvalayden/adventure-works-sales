@@ -6,4 +6,5 @@ public interface ISalesOrderRepository
 {
     Task<SalesOrderHeader?> GetSalesOrderHeaderAsync(CancellationToken cancellationToken = default);
     void Add(SalesOrderHeader saleOrderHeaderDto);
+    Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

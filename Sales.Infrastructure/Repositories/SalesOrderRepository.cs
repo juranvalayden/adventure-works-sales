@@ -21,13 +21,30 @@ public class SalesOrderRepository : ISalesOrderRepository
     {
         try
         {
-            var salesOrderHeader = await _salesDbContext
-                .SalesOrderHeaders
-                .Take(1)
-                .AsNoTracking()
+            var takenIds = _salesDbContext.SalesOrderHeaderTaken
+                .Select(t => t.SalesOrderId);
+
+            var salesOrderHeader = await _salesDbContext.SalesOrderHeaders
+                .Where(soh => !takenIds.Contains(soh.Id))
                 .FirstOrDefaultAsync(cancellationToken);
 
+            if (salesOrderHeader == null) return null;
+
+            _salesDbContext.SalesOrderHeaderTaken.Add(new SalesOrderHeaderTaken
+            {
+                SalesOrderId = salesOrderHeader.Id,
+                DateTaken = DateTimeOffset.UtcNow
+            });
+
+            var hasSaved = await _salesDbContext.SaveChangesAsync(cancellationToken) > 0;
+
+            if (!hasSaved)
+            {
+                _logger.LogWarning("Failed to save SalesOrderHeaderTaken for SalesOrderId {SalesOrderId}.", salesOrderHeader.Id);
+            }
+
             return salesOrderHeader;
+
         }
         catch (Exception exception)
         {
@@ -38,6 +55,26 @@ public class SalesOrderRepository : ISalesOrderRepository
 
     public void Add(SalesOrderHeader saleOrderHeaderDto)
     {
-        _salesDbContext.SalesOrderHeaders.Add(saleOrderHeaderDto);
+        try
+        {
+            _salesDbContext.SalesOrderHeaders.Add(saleOrderHeaderDto);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error occurred adding the SalesOrderHeader.");
+        }
+    }
+
+    public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _salesDbContext.SaveChangesAsync(cancellationToken) > 0;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error occurred saving the SalesOrderHeader.");
+            return false;
+        }
     }
 }

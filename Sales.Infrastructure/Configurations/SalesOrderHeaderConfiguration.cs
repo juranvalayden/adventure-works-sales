@@ -15,6 +15,7 @@ public class SalesOrderHeaderConfiguration : IEntityTypeConfiguration<SalesOrder
 
         builder.Property(s => s.Id)
             .IsRequired()
+            .HasColumnName("SalesOrderID")
             .HasColumnType("int");
 
         builder.Property(s => s.RevisionNumber)
