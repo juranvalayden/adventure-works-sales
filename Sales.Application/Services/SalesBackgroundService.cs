@@ -17,9 +17,29 @@ public class SalesBackgroundService : BackgroundService
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-    {   
-        const string serviceName = nameof(SalesBackgroundService);
+    {
+        // await PublishAsync(cancellationToken);
+        await ConsumeAsync(cancellationToken);
+    }
 
+    private async Task ConsumeAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("SalesBackgroundService is starting...");
+        using var scope = _serviceScopeFactory.CreateScope();
+        var provider = scope.ServiceProvider;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var salesConsumerService = provider.GetRequiredService<ISalesConsumerService>();
+
+            await salesConsumerService.ConsumerAsync(cancellationToken);
+        }
+
+        _logger.LogInformation("SalesBackgroundService is stopping.");
+    }
+
+    private async Task PublishAsync(CancellationToken cancellationToken)
+    {
         _logger.LogInformation("SalesBackgroundService is starting...");
         using var scope = _serviceScopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
@@ -32,7 +52,7 @@ public class SalesBackgroundService : BackgroundService
 
             if (saleOrderHeaderDto == null)
             {
-                _logger.LogWarning($"No SaleOrderHeader found.");
+                _logger.LogWarning("No SaleOrderHeader found.");
                 continue;
             }
 
