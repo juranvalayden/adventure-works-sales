@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/1 - Presentation/">
+    <Project Path="Sales.WebApi/Sales.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/src/2 - Application/">
+    <Project Path="Sales.Application/Sales.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/3 - Domain/">
+    <Project Path="Sales.Domain/Sales.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/4 - Infrastructure/">
+    <Project Path="Sales.Infrastructure/Sales.Infrastructure.csproj" Id="5a675f8f-b68e-4448-86f7-67db0cc43554" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
