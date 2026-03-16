@@ -17,22 +17,86 @@ public class SalesOrderService : ISalesOrderService
         _salesOrderRepository = salesOrderRepository ?? throw new ArgumentNullException(nameof(salesOrderRepository));
     }
 
-    public async Task<SalesOrderHeaderDto?> GetSalesOrderHeaderAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SalesOrderHeaderDto>> GetSalesOrderHeadersAsync(CancellationToken cancellationToken = default)
     {
-        var entity = await _salesOrderRepository.GetSalesOrderHeaderAsync(cancellationToken);
-
-        return entity == null 
-            ? null 
-            : Mapper.MapToDto(entity);
+        try
+        {
+            var entities = await _salesOrderRepository.GetAllAsync(cancellationToken);
+            return Mapper.MapFromEntitiesToDtos(entities);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred GetAllAsync");
+            return new List<SalesOrderHeaderDto>();
+        }
     }
 
-    public async Task<bool> AddAsync(SalesOrderHeaderDto saleOrderHeaderDto, CancellationToken cancellationToken = default)
+    public async Task<SalesOrderHeaderDto?> GetSalesOrderHeaderByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var entity = Mapper.MapToEntity(saleOrderHeaderDto);
-        _salesOrderRepository.Add(entity);
+        var entity = await _salesOrderRepository.GetByIdAsync(id, cancellationToken);
+
+        return entity == null
+            ? null
+            : Mapper.MapFromEntityToDto(entity);
+    }
+
+    public async Task<SalesOrderHeaderDto?> AddSalesOrderHeaderAsync(SalesOrderHeaderForCreationDto salesOrderHeaderForCreationDto,
+        CancellationToken cancellationToken = default)
+    {
+        var entityToBeCreated = Mapper.MapCreationDtoToEntity(salesOrderHeaderForCreationDto);
+
+        var createdEntity = _salesOrderRepository.Add(entityToBeCreated);
 
         var hasSaved = await _salesOrderRepository.SaveChangesAsync(cancellationToken);
 
-        return hasSaved;
+        if (hasSaved) return Mapper.MapFromEntityToDto(createdEntity);
+
+        _logger.LogError("Error creating SalesOrderHeader. AddSalesOrderHeaderAsync.");
+        return null;
+    }
+
+    public async Task<SalesOrderHeaderDto?> UpdateSalesOrderHeaderAsync(int id, SalesOrderHeaderForUpdateDto salesOrderHeaderForUpdateDto,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await _salesOrderRepository.GetByIdAsync(id, cancellationToken);
+
+        if (entity == null)
+        {
+            _logger.LogError("Not found SalesOrderHeader with {Id}.... UpdateSalesOrderHeaderAsync", id);
+            return null;
+        }
+
+        var updatedEntity = Mapper.UpdateEntityWithDto(entity, salesOrderHeaderForUpdateDto);
+
+        var dbUpdatedEntity = _salesOrderRepository.Update(updatedEntity);
+
+        var hasSaved = await _salesOrderRepository.SaveChangesAsync(cancellationToken);
+
+        if (hasSaved) return Mapper.MapFromEntityToDto(dbUpdatedEntity);
+
+        _logger.LogError("Error updating SalesOrderHeader with {Id}.... UpdateSalesOrderHeaderAsync", id);
+        return null;
+    }
+
+    public async Task<bool> DeleteSalesOrderHeaderAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var entityToBeDeleted = await _salesOrderRepository.GetByIdAsync(id, cancellationToken);
+
+        if (entityToBeDeleted == null)
+        {
+            _logger.LogError("Not found SalesOrderHeader with {Id}.... DeleteSalesOrderHeaderAsync", id);
+            return false;
+        }
+
+        var deletedEntity = _salesOrderRepository.Delete(entityToBeDeleted);
+
+        var hasDeleted = await _salesOrderRepository.SaveChangesAsync(cancellationToken);
+
+        if (!hasDeleted)
+        {
+            _logger.LogError("Error deleting SalesOrderHeader with {Id}.... DeleteSalesOrderHeaderAsync", id);
+        }
+
+        return hasDeleted;
     }
 }

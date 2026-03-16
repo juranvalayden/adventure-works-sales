@@ -8,117 +8,127 @@ public class SalesOrderHeaderConfiguration : IEntityTypeConfiguration<SalesOrder
 {
     public void Configure(EntityTypeBuilder<SalesOrderHeader> builder)
     {
-        builder.ToTable("SalesOrderHeader");
+        // Table
+        builder.ToTable("SalesOrderHeader", "SalesLT");
 
-        builder.HasKey(s => s.Id)
-            .HasName("PK_SalesOrderHeader");
+        // Primary Key
+        builder.HasKey(e => e.Id)
+            .HasName("PK_SalesOrderHeader_SalesOrderID");
 
-        builder.Property(s => s.Id)
-            .IsRequired()
-            .HasColumnName("SalesOrderID")
-            .HasColumnType("int");
+        builder.Property(e => e.Id)
+            .HasColumnName("SalesOrderID");
 
-        builder.Property(s => s.RevisionNumber)
-            .IsRequired()
-            .HasColumnType("tinyint");
+        // Required fields
+        builder.Property(e => e.RevisionNumber)
+            .HasColumnName("RevisionNumber")
+            .HasDefaultValue((byte)0);
 
-        builder.Property(s => s.OrderDate)
-            .IsRequired()
-            .HasColumnType("datetime")
-            .HasPrecision(7);
+        builder.Property(e => e.OrderDate)
+            .HasColumnName("OrderDate")
+            .HasDefaultValueSql("getdate()");
 
-        builder.Property(s => s.DueDate)
-            .IsRequired()
-            .HasColumnType("datetime")
-            .HasPrecision(7);
+        builder.Property(e => e.DueDate)
+            .HasColumnName("DueDate");
 
-        builder.Property(s => s.ShipDate)
-            .HasColumnType("datetime")
-            .HasPrecision(7)
-            .IsRequired(false);
+        builder.Property(e => e.Status)
+            .HasColumnName("Status")
+            .HasDefaultValue((byte)1);
 
-        builder.Property(s => s.Status)
-            .IsRequired()
-            .HasColumnType("tinyint");
+        builder.Property(e => e.OnlineOrderFlag)
+            .HasColumnName("OnlineOrderFlag")
+            .HasDefaultValue(true);
 
-        builder.Property(s => s.OnlineOrderFlag)
-            .IsRequired()
-            .HasColumnType("bit");
+        builder.Property(e => e.CustomerId)
+            .HasColumnName("CustomerID");
 
-        builder.Property(s => s.SalesOrderNumber)
-            .HasMaxLength(50)
-            .IsUnicode()
-            .IsRequired(false);
+        builder.Property(e => e.ShipMethod)
+            .HasColumnName("ShipMethod")
+            .HasMaxLength(100);
 
-        builder.Property(s => s.PurchaseOrderNumber)
-            .HasMaxLength(50)
-            .IsUnicode()
-            .IsRequired(false);
-
-        builder.Property(s => s.AccountNumber)
-            .HasMaxLength(30)
-            .IsUnicode()
-            .IsRequired(false);
-
-        builder.Property(s => s.CustomerId)
-            .IsRequired()
-            .HasColumnName("CustomerID")
-            .HasColumnType("int");
-
-        builder.Property(s => s.ShipToAddressId)
-            .HasColumnName("ShipToAddressID")
-            .HasColumnType("int")
-            .IsRequired(false);
-
-        builder.Property(s => s.BillToAddressId)
-            .HasColumnName("BillToAddressID")
-            .HasColumnType("int")
-            .IsRequired(false);
-
-        builder.Property(s => s.ShipMethod)
-            .IsRequired()
-            .HasMaxLength(100)
-            .IsUnicode();
-
-        builder.Property(s => s.CreditCardApprovalCode)
-            .HasMaxLength(15)
-            .IsUnicode(false)
-            .IsRequired(false);
-
-        builder.Property(s => s.SubTotal)
-            .IsRequired()
-            .HasColumnType("money");
-
-        builder.Property(s => s.TaxAmt)
-            .IsRequired()
-            .HasColumnType("money");
-
-        builder.Property(s => s.Freight)
-            .IsRequired()
-            .HasColumnType("money");
-
-        builder.Property(s => s.TotalDue)
+        builder.Property(e => e.SubTotal)
+            .HasColumnName("SubTotal")
             .HasColumnType("money")
-            .IsRequired(false);
+            .HasDefaultValue(0.00m);
 
-        builder.Property(s => s.Comment)
-            .IsUnicode()
-            .HasColumnType("nvarchar(max)")
-            .IsRequired(false);
+        builder.Property(e => e.TaxAmt)
+            .HasColumnName("TaxAmt")
+            .HasColumnType("money")
+            .HasDefaultValue(0.00m);
 
-        builder.Property(s => s.RowGuid)
-            .IsRequired()
+        builder.Property(e => e.Freight)
+            .HasColumnName("Freight")
+            .HasColumnType("money")
+            .HasDefaultValue(0.00m);
+
+        builder.Property(e => e.RowGuid)
             .HasColumnName("rowguid")
-            .HasColumnType("uniqueidentifier");
+            .HasDefaultValueSql("newid()");
 
-        builder.Property(s => s.ModifiedDate)
-            .IsRequired()
-            .HasColumnType("datetime")
-            .HasPrecision(7);
+        builder.Property(e => e.ModifiedDate)
+            .HasColumnName("ModifiedDate")
+            .HasDefaultValueSql("getdate()");
 
-        // One-to-many relationship
-        builder.HasMany(s => s.SalesOrderDetails)
-            .WithOne(d => d.SalesOrderHeader)
-            .HasForeignKey(d => d.SalesOrderHeaderId);
+        // Optional fields
+        builder.Property(e => e.ShipDate)
+            .HasColumnName("ShipDate");
+
+        builder.Property(e => e.PurchaseOrderNumber)
+            .HasColumnName("PurchaseOrderNumber")
+            .HasMaxLength(50);
+
+        builder.Property(e => e.AccountNumber)
+            .HasColumnName("AccountNumber")
+            .HasMaxLength(30);
+
+        builder.Property(e => e.ShipToAddressId)
+            .HasColumnName("ShipToAddressID");
+
+        builder.Property(e => e.BillToAddressId)
+            .HasColumnName("BillToAddressID");
+
+        builder.Property(e => e.CreditCardApprovalCode)
+            .HasColumnName("CreditCardApprovalCode")
+            .HasMaxLength(15);
+
+        builder.Property(e => e.Comment)
+            .HasColumnName("Comment");
+
+        // Computed fields
+        builder.Property(e => e.SalesOrderNumber)
+            .HasColumnName("SalesOrderNumber")
+            .ValueGeneratedOnAddOrUpdate();
+
+        builder.Property(e => e.TotalDue)
+            .HasColumnName("TotalDue")
+            .HasColumnType("money")
+            .ValueGeneratedOnAddOrUpdate();
+
+        // Indexes and unique constraints
+        builder.HasIndex(e => e.RowGuid)
+            .IsUnique()
+            .HasDatabaseName("AK_SalesOrderHeader_rowguid");
+
+        builder.HasIndex(e => e.SalesOrderNumber)
+            .IsUnique()
+            .HasDatabaseName("AK_SalesOrderHeader_SalesOrderNumber");
+
+        builder.HasIndex(e => e.CustomerId)
+            .HasDatabaseName("IX_SalesOrderHeader_CustomerID");
+
+        // Foreign keys
+        builder.HasOne(e => e.ShippingAddress)
+            .WithMany()
+            .HasForeignKey(e => e.ShipToAddressId)
+            .HasConstraintName("FK_SalesOrderHeader_Address_ShipTo_AddressID");
+
+        builder.HasOne(e => e.BillingAddress)
+            .WithMany()
+            .HasForeignKey(e => e.BillToAddressId)
+            .HasConstraintName("FK_SalesOrderHeader_Address_BillTo_AddressID");
+
+        builder.HasMany(e => e.SalesOrderDetails)
+            .WithOne(d => d.SalesOrderHeader)     // Each detail belongs to one order
+            .HasForeignKey(d => d.SalesOrderHeaderId)
+            .HasConstraintName("FK_SalesOrderDetail_SalesOrderHeader_SalesOrderID");
     }
 }

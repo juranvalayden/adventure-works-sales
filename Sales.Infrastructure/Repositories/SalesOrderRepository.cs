@@ -6,62 +6,64 @@ using Sales.Infrastructure.Configurations.Persistence;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class SalesOrderRepository : ISalesOrderRepository
+public class SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesDbContext salesDbContext) : ISalesOrderRepository
 {
-    private readonly ILogger<SalesOrderRepository> _logger;
-    private readonly SalesDbContext _salesDbContext;
+    private readonly ILogger<SalesOrderRepository> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly SalesDbContext _salesDbContext = salesDbContext ?? throw new ArgumentNullException(nameof(salesDbContext));
 
-    public SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesDbContext salesDbContext)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _salesDbContext = salesDbContext ?? throw new ArgumentNullException(nameof(salesDbContext));
-    }
-
-    public async Task<SalesOrderHeader?> GetSalesOrderHeaderAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SalesOrderHeader>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var takenIds = _salesDbContext.SalesOrderHeaderTaken
-                .Select(t => t.SalesOrderId);
-
-            var salesOrderHeader = await _salesDbContext.SalesOrderHeaders
-                .Where(soh => !takenIds.Contains(soh.Id))
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (salesOrderHeader == null) return null;
-
-            _salesDbContext.SalesOrderHeaderTaken.Add(new SalesOrderHeaderTaken
-            {
-                SalesOrderId = salesOrderHeader.Id,
-                DateTaken = DateTimeOffset.UtcNow
-            });
-
-            var hasSaved = await _salesDbContext.SaveChangesAsync(cancellationToken) > 0;
-
-            if (!hasSaved)
-            {
-                _logger.LogWarning("Failed to save SalesOrderHeaderTaken for SalesOrderId {SalesOrderId}.", salesOrderHeader.Id);
-            }
-
-            return salesOrderHeader;
+            return await _salesDbContext
+                .SalesOrderHeaders
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
         }
-        catch (Exception exception)
+        catch (Exception e)
         {
-            _logger.LogError(exception, "Error occurred fetching the SalesOrderHeader.");
-            return null;
+            _logger.LogError(e, "Error occurred getting all sales order headers from the db.");
+            throw;
         }
     }
 
-    public void Add(SalesOrderHeader saleOrderHeaderDto)
+    public async Task<SalesOrderHeader?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            _salesDbContext.SalesOrderHeaders.Add(saleOrderHeaderDto);
+            return await _salesDbContext
+                .SalesOrderHeaders
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         }
-        catch (Exception exception)
+        catch (Exception e)
         {
-            _logger.LogError(exception, "Error occurred adding the SalesOrderHeader.");
+            _logger.LogError(e, "Error occurred getting sales order header by {Id} from the db.", id);
+            throw;
         }
+    }
+
+    public SalesOrderHeader Add(SalesOrderHeader entity)
+    {
+        return _salesDbContext
+            .SalesOrderHeaders
+            .Add(entity)
+            .Entity;
+    }
+
+    public SalesOrderHeader Update(SalesOrderHeader entity)
+    {
+        return _salesDbContext
+            .SalesOrderHeaders
+            .Update(entity)
+            .Entity;
+    }
+
+    public SalesOrderHeader Delete(SalesOrderHeader entityForDeletion)
+    {
+        return _salesDbContext
+            .SalesOrderHeaders
+            .Remove(entityForDeletion)
+            .Entity;
     }
 
     public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -70,10 +72,10 @@ public class SalesOrderRepository : ISalesOrderRepository
         {
             return await _salesDbContext.SaveChangesAsync(cancellationToken) > 0;
         }
-        catch (Exception exception)
+        catch (Exception e)
         {
-            _logger.LogError(exception, "Error occurred saving the SalesOrderHeader.");
-            return false;
+            _logger.LogError(e, "Error occurred saving sales order header to the db.");
+            throw;
         }
     }
 }

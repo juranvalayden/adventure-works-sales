@@ -1,6 +1,7 @@
 ﻿namespace Sales.Application.Interfaces;
 
-public interface ISalesConsumerService
+public interface ISalesConsumerService : IAsyncDisposable
 {
-    Task<bool> ConsumerAsync(CancellationToken cancellationToken = default);
+    Task<bool> StartConsumingAsync(CancellationToken cancellationToken = default);
+    Task StopConsumingAsync(CancellationToken cancellationToken);
 }

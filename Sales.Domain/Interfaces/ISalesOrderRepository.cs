@@ -4,7 +4,12 @@ namespace Sales.Domain.Interfaces;
 
 public interface ISalesOrderRepository
 {
-    Task<SalesOrderHeader?> GetSalesOrderHeaderAsync(CancellationToken cancellationToken = default);
-    void Add(SalesOrderHeader saleOrderHeaderDto);
+    Task<IEnumerable<SalesOrderHeader>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<SalesOrderHeader?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    SalesOrderHeader Add(SalesOrderHeader entityForCreation);
+    SalesOrderHeader Update(SalesOrderHeader entity);
+    SalesOrderHeader Delete(SalesOrderHeader entityForDeletion);
+
     Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

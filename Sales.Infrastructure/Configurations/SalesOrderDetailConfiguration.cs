@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sales.Domain.Entities;
 
@@ -8,52 +9,61 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
 {
     public void Configure(EntityTypeBuilder<SalesOrderDetail> builder)
     {
-        builder.ToTable("SalesOrderDetail");
+        builder.ToTable("SalesOrderDetail", "SalesLT");
 
         builder.HasKey(d => d.Id)
             .HasName("PK_SalesOrderDetail");
 
         builder.Property(d => d.Id)
-            .IsRequired()
             .HasColumnName("SalesOrderDetailID")
-            .HasColumnType("int");
+            .HasColumnType("int")
+            .ValueGeneratedOnAdd(); // Identity column
+
+        //builder.Property(d => d.Id)
+        //    .HasColumnName("SalesOrderDetailID")
+        //    .HasColumnType("int")
+        //    .ValueGeneratedOnAdd()
+        //    .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
         builder.Property(d => d.SalesOrderHeaderId)
-            .IsRequired()
             .HasColumnName("SalesOrderID")
-            .HasColumnType("int");
+            .HasColumnType("int")
+            .IsRequired();
 
         builder.Property(d => d.OrderQty)
-            .IsRequired()
-            .HasColumnType("smallint");
+            .HasColumnType("smallint")
+            .IsRequired();
 
         builder.Property(d => d.ProductId)
-            .IsRequired()
             .HasColumnName("ProductID")
-            .HasColumnType("int");
+            .HasColumnType("int")
+            .IsRequired();
 
         builder.Property(d => d.UnitPrice)
-            .IsRequired()
-            .HasColumnType("money");
+            .HasColumnType("money")
+            .IsRequired();
 
         builder.Property(d => d.UnitPriceDiscount)
-            .IsRequired()
-            .HasColumnType("money");
+            .HasColumnType("money")
+            .IsRequired();
 
+        // Computed column
         builder.Property(d => d.LineTotal)
             .HasColumnType("numeric(38,6)")
-            .IsRequired(false);
+            .ValueGeneratedOnAddOrUpdate()
+            .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
         builder.Property(d => d.RowGuid)
-            .IsRequired()
             .HasColumnName("rowguid")
-            .HasColumnType("uniqueidentifier");
+            .HasColumnType("uniqueidentifier")
+            .HasDefaultValueSql("NEWID()");
 
         builder.Property(d => d.ModifiedDate)
-            .IsRequired()
             .HasColumnType("datetime")
-            .HasPrecision(7);
+            .HasPrecision(7)
+            .HasDefaultValueSql("getdate()");
 
+        // Relationship back to SalesOrderHeader
         builder.HasOne(d => d.SalesOrderHeader)
             .WithMany(h => h.SalesOrderDetails)
             .HasForeignKey(d => d.SalesOrderHeaderId);

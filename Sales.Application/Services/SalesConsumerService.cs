@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Sales.Application.Common.Helpers;
+using Sales.Application.Configurations;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 
@@ -12,42 +14,43 @@ namespace Sales.Application.Services;
 public class SalesConsumerService : ISalesConsumerService
 {
     private readonly ILogger<SalesConsumerService> _logger;
+    private readonly MyRabbitOptions _myRabbitOptions;
     private readonly JsonSerializerOptionsWrapper _jsonSerializerOptionsWrapper;
-
-    public SalesConsumerService(ILogger<SalesConsumerService> logger, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
-    }
 
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public async Task<bool> ConsumerAsync(CancellationToken cancellationToken = default)
+    public SalesConsumerService(ILogger<SalesConsumerService> logger, IOptions<MyRabbitOptions> options, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
+        _myRabbitOptions = options.Value;
+    }
+
+    public async Task<bool> StartConsumingAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             var factory = new ConnectionFactory
             {
-                HostName = "localhost",
+                HostName = "localhost", // use "localhost" if API runs outside Docker
                 Port = 5672,
                 UserName = "guest",
                 Password = "guest"
             };
 
-            // Create connection and channel once, keep them alive
             _connection ??= await factory.CreateConnectionAsync(cancellationToken);
             _channel ??= await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
             await _channel.QueueDeclareAsync(
-                queue: "messages",
+                queue: "sales-orders",
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation("Waiting to consume...");
+            _logger.LogInformation("Waiting to consume messages from 'sales-orders'...");
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -55,6 +58,12 @@ public class SalesConsumerService : ISalesConsumerService
             {
                 await HandleMessageAsync(eventArgs.Body, eventArgs.DeliveryTag, cancellationToken);
             };
+
+            await _channel.BasicConsumeAsync(
+                queue: "sales-orders",
+                autoAck: false, // manual ack
+                consumer: consumer,
+                cancellationToken: cancellationToken);
 
             return true;
         }
@@ -77,10 +86,46 @@ public class SalesConsumerService : ISalesConsumerService
             _logger.LogInformation("Received SalesOrderHeaderDto with {Id}", salesOrderHeaderDto.Id);
         }
 
-        // acknowledge the message
-        await _channel.BasicAckAsync(deliveryTag, multiple: false, cancellationToken: cancellationToken);
+        if (_channel != null)
+        {
+            await _channel.BasicAckAsync(deliveryTag, multiple: false, cancellationToken: cancellationToken);
+        }
 
         // optional: simulate work
         await Task.Delay(2000, cancellationToken);
+    }
+
+    public async Task StopConsumingAsync(CancellationToken cancellationToken)
+    {
+        if (_channel != null)
+        {
+            await _channel.CloseAsync(cancellationToken);
+            _channel = null;
+        }
+
+        if (_connection != null)
+        {
+            await _connection.CloseAsync(cancellationToken);
+            _connection = null;
+        }
+
+        _logger.LogInformation("Stopped consuming from 'sales-orders'.");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_channel != null)
+        {
+            await _channel.DisposeAsync();
+            _channel = null;
+        }
+
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync();
+            _connection = null;
+        }
+
+        _logger.LogInformation("SalesConsumerService disposed successfully.");
     }
 }

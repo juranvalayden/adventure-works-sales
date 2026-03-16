@@ -1,32 +1,29 @@
-﻿using Sales.Domain.Entities;
-
-namespace Sales.Application.Dtos;
+﻿namespace Sales.Application.Dtos;
 
 public record SalesOrderHeaderDto
 {
-    public int Id { get; set; }
-    public byte RevisionNumber { get; set; }
-    public DateTime OrderDate { get; set; }
-    public DateTime DueDate { get; set; }
-    public DateTime? ShipDate { get; set; }
-    public byte Status { get; set; }
-    public bool OnlineOrderFlag { get; set; }
-    public string? SalesOrderNumber { get; set; }
-    public string? PurchaseOrderNumber { get; set; }
-    public string? AccountNumber { get; set; }
-    public int CustomerId { get; set; }
-    public int? ShipToAddressId { get; set; }
-    public int? BillToAddressId { get; set; }
-    public string ShipMethod { get; set; } = string.Empty;
-    public string? CreditCardApprovalCode { get; set; }
-    public decimal SubTotal { get; set; }
-    public decimal TaxAmt { get; set; }
-    public decimal Freight { get; set; }
-    public decimal? TotalDue { get; set; }
-    public string? Comment { get; set; }
-    public Guid RowGuid { get; set; }
-    public DateTime ModifiedDate { get; set; }
+    public int Id { get; init; }
+    public byte RevisionNumber { get; init; }
+    public DateTime OrderDate { get; init; }
+    public DateTime DueDate { get; init; }
+    public DateTime? ShipDate { get; init; }
+    public byte Status { get; init; }
+    public bool OnlineOrderFlag { get; init; }
+    public string? SalesOrderNumber { get; init; }
+    public string? PurchaseOrderNumber { get; init; }
+    public string? AccountNumber { get; init; }
+    public int CustomerId { get; init; }
+    public int? ShipToAddressId { get; init; }
+    public int? BillToAddressId { get; init; }
+    public string ShipMethod { get; init; } = string.Empty;
+    public string? CreditCardApprovalCode { get; init; }
+    public decimal SubTotal { get; init; }
+    public decimal TaxAmt { get; init; }
+    public decimal Freight { get; init; }
+    public decimal? TotalDue { get; init; }
+    public string? Comment { get; init; }
+    public Guid RowGuid { get; init; }
+    public DateTime ModifiedDate { get; init; }
 
-    // Navigation
-    public ICollection<SalesOrderDetail> SalesOrderDetails { get; set; } = new List<SalesOrderDetail>();
+    public ICollection<SalesOrderDetailDto> SalesOrderDetails { get; init; } = new List<SalesOrderDetailDto>();
 }

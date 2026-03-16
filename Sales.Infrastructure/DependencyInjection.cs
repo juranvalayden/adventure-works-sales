@@ -21,9 +21,12 @@ public static class DependencyInjection
                 b.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
                 b.MigrationsHistoryTable(HistoryRepository.DefaultTableName, "SalesLT");
             });
+
+            // Uncomment if you want lazy loading
             // options.UseLazyLoadingProxies();
         });
 
+        // Register repositories
         services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
     }
 }

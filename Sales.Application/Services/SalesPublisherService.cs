@@ -1,20 +1,19 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Sales.Application.Common.Helpers;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
-using System.Text;
-using System.Text.Json;
 
 namespace Sales.Application.Services;
 
-public class SalesProducerService : ISalesProducerService
+public class SalesPublisherService : ISalesPublisherService
 {
-    private readonly ILogger<SalesProducerService> _logger;
+    private readonly ILogger<SalesPublisherService> _logger;
     private readonly JsonSerializerOptionsWrapper _jsonSerializerOptionsWrapper;
-
-    public SalesProducerService(ILogger<SalesProducerService> logger, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
+    public SalesPublisherService(ILogger<SalesPublisherService> logger, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
@@ -67,7 +66,7 @@ public class SalesProducerService : ISalesProducerService
 
         var factory = new ConnectionFactory
         {
-            HostName = "localhost",
+            HostName = "localhost",   // or "rabbitmq" if inside Docker network
             Port = 5672,
             UserName = "guest",
             Password = "guest"
@@ -79,7 +78,7 @@ public class SalesProducerService : ISalesProducerService
             await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
             await channel.QueueDeclareAsync(
-                queue: "messages",
+                queue: "sales-orders",
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
@@ -89,25 +88,23 @@ public class SalesProducerService : ISalesProducerService
             var message = JsonSerializer.Serialize(saleOrderHeaderDto, _jsonSerializerOptionsWrapper.Options);
             var body = Encoding.UTF8.GetBytes(message);
 
+            var props = new BasicProperties { Persistent = true };
+
             await channel.BasicPublishAsync(
                 exchange: string.Empty,
-                routingKey: "messages",
+                routingKey: "sales-orders",
                 mandatory: true,
-                basicProperties: new BasicProperties { Persistent = true },
+                basicProperties: props,
                 body: body,
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation("Sent SalesOrderHeader with {Id}", saleOrderHeaderDto.Id);
-
-            await Task.Delay(2000, cancellationToken);
+            _logger.LogInformation("Successfully published SalesOrderHeader {Id}", saleOrderHeaderDto.Id);
+            return true;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
-            throw;
+            _logger.LogError(ex, "Failed to publish SalesOrderHeader {Id}", saleOrderHeaderDto.Id);
+            throw; // or implement retry/backoff here
         }
-
-
-        return true;
     }
 }

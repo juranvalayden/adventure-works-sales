@@ -2,8 +2,7 @@
 
 namespace Sales.Application.Interfaces;
 
-public interface ISalesProducerService
+public interface ISalesPublisherService
 {
-    Task<bool> ConsumerAsync(CancellationToken cancellationToken = default);
     Task<bool> PublishAsync(SalesOrderHeaderDto saleOrderHeaderDto, CancellationToken cancellationToken = default);
 }
