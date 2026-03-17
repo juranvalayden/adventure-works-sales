@@ -26,20 +26,6 @@ public static class DependencyInjection
         // Publisher/Consumer services should be singletons if they manage RabbitMQ connections
         services.AddSingleton<ISalesPublisherService, SalesPublisherService>();
         services.AddSingleton<ISalesConsumerService, SalesConsumerService>();
-
-        services.AddSingleton(sp =>
-        {
-
-            return new ConnectionFactory
-            {
-                HostName = options.Host,
-                Port = options.Port,
-                UserName = options.Username,
-                Password = options.Password,
-                VirtualHost = options.VirtualHost,
-                RequestedHeartbeat = TimeSpan.FromSeconds(options.RequestedHeartbeat),
-                Ssl = new SslOption { Enabled = options.SslEnabled }
-            };
-        });
+        services.AddSingleton<IRabbitService, RabbitConnectionSetup>();
     }
 }

@@ -14,41 +14,45 @@ namespace Sales.Application.Services;
 public class SalesConsumerService : ISalesConsumerService
 {
     private readonly ILogger<SalesConsumerService> _logger;
-    private readonly MyRabbitOptions _myRabbitOptions;
+    private readonly RabbitMqOptions _rabbitMqOptions;
     private readonly JsonSerializerOptionsWrapper _jsonSerializerOptionsWrapper;
+    private readonly IRabbitService _rabbitService;
 
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public SalesConsumerService(ILogger<SalesConsumerService> logger, IOptions<MyRabbitOptions> options, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper)
+    public SalesConsumerService(ILogger<SalesConsumerService> logger, IOptions<RabbitMqOptions> options, JsonSerializerOptionsWrapper jsonSerializerOptionsWrapper, IRabbitService rabbitService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jsonSerializerOptionsWrapper = jsonSerializerOptionsWrapper ?? throw new ArgumentNullException(nameof(jsonSerializerOptionsWrapper));
-        _myRabbitOptions = options.Value;
+        _rabbitService = rabbitService ?? throw new ArgumentNullException(nameof(rabbitService));
+        _rabbitMqOptions = options.Value;
     }
 
     public async Task<bool> StartConsumingAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var factory = new ConnectionFactory
-            {
-                HostName = "localhost", // use "localhost" if API runs outside Docker
-                Port = 5672,
-                UserName = "guest",
-                Password = "guest"
-            };
+            _channel ??= await _rabbitService.CreateChannelAsync(cancellationToken);
 
-            _connection ??= await factory.CreateConnectionAsync(cancellationToken);
-            _channel ??= await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+            // var factory = new ConnectionFactory
+            // {
+            //     HostName = "localhost", // use "localhost" if API runs outside Docker
+            //     Port = 5672,
+            //     UserName = "guest",
+            //     Password = "guest"
+            // };
+            // 
+            // _connection ??= await factory.CreateConnectionAsync(cancellationToken);
+            // _channel ??= await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-            await _channel.QueueDeclareAsync(
-                queue: "sales-orders",
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null,
-                cancellationToken: cancellationToken);
+            //await _channel.QueueDeclareAsync(
+            //    queue: "sales-orders",
+            //    durable: true,
+            //    exclusive: false,
+            //    autoDelete: false,
+            //    arguments: null,
+            //    cancellationToken: cancellationToken);
 
             _logger.LogInformation("Waiting to consume messages from 'sales-orders'...");
 

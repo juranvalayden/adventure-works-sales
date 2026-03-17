@@ -5,7 +5,7 @@ using Sales.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.Configure<MyRabbitOptions>(builder.Configuration.GetSection(MyRabbitOptions.RabbitMq));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.RabbitMq));
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();

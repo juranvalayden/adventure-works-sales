@@ -4,35 +4,26 @@ using Sales.Application.Configurations;
 
 namespace Sales.Application.Common.Helpers;
 
-public class RabbitConnectionSetup
+public class RabbitConnectionSetup : IRabbitService
 {
-    private readonly IOptions<MyRabbitOptions> _options;
-    private ConnectionFactory _connectionFactory;
-    private IConnection? _connection = null;
-    private IChannel? _channel = null;
-    
-    public IConnection Connection { get; private set; }
-    public IChannel Channel { get; private set; }
+    private readonly RabbitMqOptions _rabbitMqOptions;
 
-    private readonly MyRabbitOptions _rabbitOptions;
+    private IConnection? _connection;
+    private IChannel? _channel;
 
-    public RabbitConnectionSetup(IOptions<MyRabbitOptions> options, ConnectionFactory connectionFactory)
+    public RabbitConnectionSetup(IOptions<RabbitMqOptions> options)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-        _rabbitOptions = options.Value;
+        _rabbitMqOptions = options.Value;
     }
 
-    public async Task<IChannel> CreateChannel(CancellationToken cancellationToken)
+    public async Task<IChannel> CreateChannelAsync(CancellationToken cancellationToken)
     {
-        _connectionFactory ??= CreateFactory();
-
-        _connection ??= await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        var factory = CreateConnectionFactory();
+        _connection ??= await factory.CreateConnectionAsync(cancellationToken);
         _channel ??= await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
         await _channel.QueueDeclareAsync(
-            queue: _rabbitOptions.Consumer.Queue ?? "sales-orders",
+            queue: _rabbitMqOptions.Consumer.Queue ?? "sales-orders",
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -42,14 +33,14 @@ public class RabbitConnectionSetup
         return _channel;
     }
 
-    private ConnectionFactory CreateFactory()
+    private ConnectionFactory CreateConnectionFactory()
     {
         return new ConnectionFactory
         {
-            Port = _rabbitOptions.Port ?? 5672,
-            UserName = _rabbitOptions.Username ?? "guest",
-            Password = _rabbitOptions.Password ?? "guest",
-            HostName = _rabbitOptions.HostName ?? "localhost"
+            HostName = _rabbitMqOptions.HostName ?? "localhost",
+            Port = _rabbitMqOptions.Port ?? 5672,
+            UserName = _rabbitMqOptions.Username ?? "guest",
+            Password = _rabbitMqOptions.Password ?? "guest",
         };
     }
 }

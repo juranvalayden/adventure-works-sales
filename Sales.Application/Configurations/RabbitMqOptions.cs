@@ -1,6 +1,6 @@
 ﻿namespace Sales.Application.Configurations;
 
-public sealed class MyRabbitOptions
+public sealed class RabbitMqOptions
 {
     public const string RabbitMq = "RabbitMq";
     public string? HostName { get; set; } = null!;
