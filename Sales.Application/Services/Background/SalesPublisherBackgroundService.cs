@@ -7,7 +7,7 @@ using Sales.Application.Interfaces;
 
 namespace Sales.Application.Services.Background;
 
-public sealed class SalesPublisherBackgroundService(ILogger<SalesPublisherBackgroundService> logger, IServiceScopeFactory serviceScopeFactory) : BackgroundService
+public class SalesPublisherBackgroundService(ILogger<SalesPublisherBackgroundService> logger, IServiceScopeFactory serviceScopeFactory) : BackgroundService
 {
     private const string _queue = "sales-orders";
     private readonly ILogger<SalesPublisherBackgroundService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

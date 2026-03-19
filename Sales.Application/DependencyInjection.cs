@@ -45,7 +45,7 @@ public static class DependencyInjection
         services.AddSingleton<IConsumer<SalesOrderHeaderDto>, SalesOrderConsumerService>();
 
         // Background services
-        // services.AddHostedService<SalesPublisherBackgroundService>();
+        services.AddHostedService<SalesPublisherBackgroundService>();
         services.AddHostedService<SalesConsumerBackgroundService>();
     }
 }

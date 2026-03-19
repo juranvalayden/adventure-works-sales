@@ -6,7 +6,7 @@ using Sales.Application.Interfaces;
 
 namespace Sales.Application.Services.Background;
 
-public sealed class SalesConsumerBackgroundService(ILogger<SalesConsumerBackgroundService> logger, IServiceScopeFactory serviceScopeFactory)
+public class SalesConsumerBackgroundService(ILogger<SalesConsumerBackgroundService> logger, IServiceScopeFactory serviceScopeFactory)
     : BackgroundService
 {
     private const string _queue = "sales-orders";
@@ -73,7 +73,6 @@ public sealed class SalesConsumerBackgroundService(ILogger<SalesConsumerBackgrou
             }
             catch (OperationCanceledException)
             {
-                // Cancellation while stopping; swallow as it's expected during shutdown.
                 _logger.LogInformation("Stop operation was canceled while stopping the consumer.");
             }
             catch (Exception ex)
