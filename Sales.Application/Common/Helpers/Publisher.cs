@@ -14,42 +14,26 @@ public class Publisher<T>(ILogger<Publisher<T>> logger, IConnectionFactory conne
     private readonly ILogger<Publisher<T>> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
     private readonly SerializationWrapper _serializationWrapper = serializationWrapper ?? throw new ArgumentNullException(nameof(serializationWrapper));
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-
-    private async Task<IChannel> CreateChannelAsync(string queue, CancellationToken cancellationToken = default)
-    {
-        if (_connection is not { IsOpen: true })
-        {
-            _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
-        }
-
-        if (_channel is { IsOpen: true }) return _channel;
-
-        _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
-
-        await _channel.QueueDeclareAsync(
-            queue: queue,
-            exclusive: false,
-            durable: true,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: cancellationToken);
-
-        return _channel;
-    }
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private bool _disposed;
 
     public async Task<bool> PublishAsync(T message, string queue, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(queue)) throw new ArgumentNullException(nameof(queue));
+        ObjectDisposedException.ThrowIf(_disposed, nameof(Consumer<>));
+
+        await _semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
+
         try
         {
-            await _semaphore.WaitAsync(cancellationToken);
-
-            _channel ??= await CreateChannelAsync(queue, cancellationToken);
+            if (_connection is not { IsOpen: true })
+            {
+                _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken: cancellationToken);
+            }
 
             if (_channel is not { IsOpen: true })
             {
-                _logger.LogWarning("Channel is closed, recreating...");
-                _channel = await CreateChannelAsync(queue, cancellationToken);
+                _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             }
 
             var serializedMessage = JsonSerializer.Serialize(message, _serializationWrapper.Options);
@@ -73,35 +57,70 @@ public class Publisher<T>(ILogger<Publisher<T>> logger, IConnectionFactory conne
         }
         finally
         {
-            _semaphore.Release();
+            _semaphoreSlim.Release();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+
+        var cancellationToken = CancellationToken.None;
+
+        await CloseChannelAsync(cancellationToken);
+        await CloseConnectionAsync(cancellationToken);
+
+        _semaphoreSlim.Dispose();
+        _disposed = _channel is null && _connection is null;
+    }
+
+    private async ValueTask CloseConnectionAsync(CancellationToken cancellationToken)
+    {
         try
         {
-            if (_channel is not null)
+            if (_connection != null)
             {
-                await _channel.CloseAsync();
-                await _channel.DisposeAsync();
-                _channel = null;
-            }
+                try
+                {
+                    await _connection.CloseAsync(cancellationToken);
+                }
+                catch
+                {
+                    /* swallow */
+                }
 
-            if (_connection is not null)
-            {
-                await _connection.CloseAsync();
-                await _connection.DisposeAsync();
+                _connection.Dispose();
                 _connection = null;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error disposing RabbitMQ sender resources");
+            _logger.LogWarning(ex, "Exception while disposing connection");
         }
-        finally
+    }
+
+    private async ValueTask CloseChannelAsync(CancellationToken cancellationToken)
+    {
+        try
         {
-            _semaphore.Dispose();
+            if (_channel != null)
+            {
+                try
+                {
+                    await _channel.CloseAsync(cancellationToken);
+                }
+                catch
+                {
+                    /* swallow */
+                }
+
+                _channel.Dispose();
+                _channel = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Exception while disposing channel");
         }
     }
 }

@@ -17,23 +17,21 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
     private IConnection? _connection;
     private IChannel? _channel;
     private string? _consumerTag;
-    private readonly SemaphoreSlim _startStopLock = new(1, 1);
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
     private bool _started;
     private bool _disposed;
 
     public async Task<bool> StartConsumingAsync(string queue, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(queue)) throw new ArgumentException("Queue name required", nameof(queue));
+        if (string.IsNullOrWhiteSpace(queue)) throw new ArgumentNullException(nameof(queue));
+        ObjectDisposedException.ThrowIf(_disposed, nameof(Consumer<>));
 
-        if (_disposed) throw new ObjectDisposedException(nameof(Consumer<T>));
-
-        await _startStopLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
             if (_started) return true;
 
-            // Create connection and channel if needed
             if (_connection is not { IsOpen: true })
             {
                 _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken: cancellationToken);
@@ -45,11 +43,11 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
             }
 
             await _channel.QueueDeclareAsync(
-                queue: queue, 
-                durable: true, 
-                exclusive: false, 
+                queue: queue,
+                durable: true,
+                exclusive: false,
                 autoDelete: false,
-                arguments: null, 
+                arguments: null,
                 cancellationToken: cancellationToken);
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -69,9 +67,9 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
                             _logger.LogError("Deserialized message was null for type {TypeName}. DeliveryTag: {Tag}", typeof(T).Name, eventArgs.DeliveryTag);
 
                             await _channel.BasicNackAsync(
-                                eventArgs.DeliveryTag, 
-                                multiple: false, 
-                                requeue: false, 
+                                eventArgs.DeliveryTag,
+                                multiple: false,
+                                requeue: false,
                                 cancellationToken: cancellationToken);
 
                             return;
@@ -88,9 +86,9 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
                     {
                         _logger.LogError(jsonException, "Failed to deserialize message for type {TypeName}. Message: {Message}", typeof(T).Name, message);
                         await _channel.BasicNackAsync(
-                            eventArgs.DeliveryTag, 
-                            multiple: false, 
-                            requeue: false, 
+                            eventArgs.DeliveryTag,
+                            multiple: false,
+                            requeue: false,
                             cancellationToken: cancellationToken);
 
                         return;
@@ -118,7 +116,7 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
         }
         finally
         {
-            _startStopLock.Release();
+            _semaphoreSlim.Release();
         }
     }
 
@@ -126,7 +124,7 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
     {
         if (_disposed) return;
 
-        await _startStopLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -151,7 +149,7 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
             }
             catch (OperationCanceledException)
             {
-                 /* ignore */
+                /* ignore */
             }
 
             _started = false;
@@ -159,7 +157,7 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
         }
         finally
         {
-            _startStopLock.Release();
+            _semaphoreSlim.Release();
         }
     }
 
@@ -178,11 +176,10 @@ public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connect
             _logger.LogWarning(ex, "Exception while stopping consumer during dispose");
         }
 
-        // Close and dispose channel and connection
         await CloseChannelAsync(cancellationToken);
         await CloseConnectionAsync(cancellationToken);
 
-        _startStopLock.Dispose();
+        _semaphoreSlim.Dispose();
         _disposed = _channel is null && _connection is null;
     }
 
