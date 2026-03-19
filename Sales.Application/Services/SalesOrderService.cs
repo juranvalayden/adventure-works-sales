@@ -6,16 +6,11 @@ using Sales.Domain.Interfaces;
 
 namespace Sales.Application.Services;
 
-public class SalesOrderService : ISalesOrderService
+public class SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRepository salesOrderRepository)
+    : ISalesOrderService
 {
-    private readonly ILogger<SalesOrderService> _logger;
-    private readonly ISalesOrderRepository _salesOrderRepository;
-
-    public SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRepository salesOrderRepository)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _salesOrderRepository = salesOrderRepository ?? throw new ArgumentNullException(nameof(salesOrderRepository));
-    }
+    private readonly ILogger<SalesOrderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ISalesOrderRepository _salesOrderRepository = salesOrderRepository ?? throw new ArgumentNullException(nameof(salesOrderRepository));
 
     public async Task<IEnumerable<SalesOrderHeaderDto>> GetSalesOrderHeadersAsync(CancellationToken cancellationToken = default)
     {

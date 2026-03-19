@@ -2,7 +2,7 @@
 
 namespace Sales.Application.Common.Helpers;
 
-public class JsonSerializerOptionsWrapper
+public class SerializationWrapper
 {
     public JsonSerializerOptions Options { get; } = new(JsonSerializerDefaults.Web)
     {
