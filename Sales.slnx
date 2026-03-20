@@ -1,7 +1,7 @@
 <Solution>
-  <Folder Name="/Solution-Items/" />
-  <Folder Name="/Solution-Items/postman-collection/">
-    <File Path="Solution-Items/postman-collection/sales_postman_collection.json" />
+  <Folder Name="/Solution Items/" />
+  <Folder Name="/Solution Items/postman-collections/">
+    <File Path="Solution Items/postman-collection/sales_postman_collection.json" />
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/1 - Presentation/">
