@@ -9,7 +9,8 @@ public class SalesOrderHeaderConfiguration : IEntityTypeConfiguration<SalesOrder
     public void Configure(EntityTypeBuilder<SalesOrderHeader> builder)
     {
         // Table
-        builder.ToTable("SalesOrderHeader", "SalesLT");
+        builder.ToTable("SalesOrderHeader", "SalesLT", 
+                tb => tb.UseSqlOutputClause(false));
 
         // Primary Key
         builder.HasKey(e => e.Id)

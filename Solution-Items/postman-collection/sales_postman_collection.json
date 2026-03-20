@@ -1,0 +1,316 @@
+{
+  "info": {
+    "_postman_id": "035b4a01-880c-4d28-b4a9-ebcff9cdb153",
+    "name": "08. Sales.LT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "26302119"
+  },
+  "item": [
+    {
+      "name": "GET-sales-order-headers",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET-sales-order-header-by-id (found)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales/71946",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales",
+            "71946"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET-sales-order-header-by-id (not found)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales/99999",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales",
+            "99999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST-sales-order-header",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate random SubTotal and Freight\r",
+              "// SubTotal between 500 and 2000\r",
+              "const subTotal = (Math.random() * (2000 - 500) + 500).toFixed(2);\r",
+              "// Freight between 20 and 200\r",
+              "const freight = (Math.random() * (200 - 20) + 20).toFixed(2);\r",
+              "\r",
+              "// TaxAmt = ~15% of (SubTotal + Freight)\r",
+              "const taxAmt = ((parseFloat(subTotal) + parseFloat(freight)) * 0.15).toFixed(2);\r",
+              "\r",
+              "// Build JSON payload (no dates, no RowGuid)\r",
+              "const payload = {\r",
+              "  revisionNumber: 0,\r",
+              "  status: 5,\r",
+              "  onlineOrderFlag: false,\r",
+              "  customerId: 29847,\r",
+              "  shipMethod: \"CARGO TRANSPORT 5\",\r",
+              "  subTotal: parseFloat(subTotal),\r",
+              "  taxAmt: parseFloat(taxAmt),\r",
+              "  freight: parseFloat(freight),\r",
+              "  shipDate: null,\r",
+              "  purchaseOrderNumber: null,\r",
+              "  accountNumber: null,\r",
+              "  shipToAddressId: null,\r",
+              "  billToAddressId: null,\r",
+              "  creditCardApprovalCode: null,\r",
+              "  comment: null\r",
+              "};\r",
+              "\r",
+              "// Save to environment variable\r",
+              "pm.environment.set(\"salesOrderPayload\", JSON.stringify(payload));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{{salesOrderPayload}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE-sales-order-header",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales/71938",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales",
+            "71938"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT-sales-order-header",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate a random 15-character alphanumeric string\r",
+              "function generateApprovalCode(length) {\r",
+              "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';\r",
+              "    let result = '';\r",
+              "    for (let i = 0; i < length; i++) {\r",
+              "        result += chars.charAt(Math.floor(Math.random() * chars.length));\r",
+              "    }\r",
+              "    return result;\r",
+              "}\r",
+              "\r",
+              "// Build the payload object\r",
+              "const payload = {\r",
+              "    creditCardApprovalCode: generateApprovalCode(15),\r",
+              "    comment: \":) Using PUT - modified at \" + new Date().toISOString()\r",
+              "};\r",
+              "\r",
+              "// Save the payload as a stringified variable\r",
+              "pm.variables.set(\"salesOrderPayload\", JSON.stringify(payload));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{{salesOrderPayload}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales/71946",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales",
+            "71946"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PATCH-sales-order-header",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "function generateApprovalCode(length) {\r",
+              "    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';\r",
+              "    let result = '';\r",
+              "    for (let i = 0; i < length; i++) {\r",
+              "        result += chars.charAt(Math.floor(Math.random() * chars.length));\r",
+              "    }\r",
+              "    return result;\r",
+              "}\r",
+              "\r",
+              "const patchPayload = [\r",
+              "    {\r",
+              "        op: \"replace\",\r",
+              "        path: \"/creditCardApprovalCode\",\r",
+              "        value: generateApprovalCode(15)\r",
+              "    },\r",
+              "    {\r",
+              "        op: \"replace\",\r",
+              "        path: \"/comment\",        \r",
+              "        value: \";) Using PATCH - modified at \" + new Date().toISOString()\r",
+              "    }\r",
+              "];\r",
+              "\r",
+              "pm.variables.set(\"salesOrderPatchPayload\", JSON.stringify(patchPayload));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json-patch+json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{salesOrderPatchPayload}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://localhost:{{sales-lt-portnumber}}/api/sales/71946",
+          "protocol": "https",
+          "host": [
+            "localhost"
+          ],
+          "port": "{{sales-lt-portnumber}}",
+          "path": [
+            "api",
+            "sales",
+            "71946"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

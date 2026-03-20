@@ -123,11 +123,23 @@ public static class Mapper
         }).ToList();
     }
 
-    public static SalesOrderHeader UpdateEntityWithDto(SalesOrderHeader entityToBeUpdated, SalesOrderHeaderForUpdateDto updatedDto)
+    public static SalesOrderHeader UpdateEntityWithDto(SalesOrderHeaderForUpdateDto updateDto, SalesOrderHeader entityToBePatched)
     {
-        entityToBeUpdated.CreditCardApprovalCode = updatedDto.CreditCardApprovalCode;
-        entityToBeUpdated.Comment = updatedDto.Comment;
+        var modifiedDate = DateTime.UtcNow;
 
-        return entityToBeUpdated;
+        entityToBePatched.CreditCardApprovalCode = updateDto.CreditCardApprovalCode;
+        entityToBePatched.Comment = updateDto.Comment;
+        entityToBePatched.ModifiedDate = modifiedDate;
+
+        return entityToBePatched;
+    }
+
+    public static SalesOrderHeaderForUpdateDto MapEntityDtoToUpdateDto(SalesOrderHeader entity)
+    {
+        return new SalesOrderHeaderForUpdateDto
+        {
+            CreditCardApprovalCode = entity.CreditCardApprovalCode,
+            Comment = entity.Comment
+        };
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.Extensions.Logging;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Mappers;
@@ -50,6 +51,7 @@ public class SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRep
         return null;
     }
 
+
     public async Task<SalesOrderHeaderDto?> UpdateSalesOrderHeaderAsync(int id, SalesOrderHeaderForUpdateDto salesOrderHeaderForUpdateDto,
         CancellationToken cancellationToken = default)
     {
@@ -61,7 +63,33 @@ public class SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRep
             return null;
         }
 
-        var updatedEntity = Mapper.UpdateEntityWithDto(entity, salesOrderHeaderForUpdateDto);
+        var updatedEntity = Mapper.UpdateEntityWithDto(salesOrderHeaderForUpdateDto, entity);
+
+        var dbUpdatedEntity = _salesOrderRepository.Update(updatedEntity);
+
+        var hasSaved = await _salesOrderRepository.SaveChangesAsync(cancellationToken);
+
+        if (hasSaved) return Mapper.MapFromEntityToDto(dbUpdatedEntity);
+
+        _logger.LogError("Error updating SalesOrderHeader with {Id}.... UpdateSalesOrderHeaderAsync", id);
+        return null;
+    }
+
+    public async Task<SalesOrderHeaderDto?> PatchDocumentAsync(int id, JsonPatchDocument<SalesOrderHeaderForUpdateDto> patchDocument,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await _salesOrderRepository.GetByIdAsync(id, cancellationToken);
+
+        if (entity == null)
+        {
+            return null;
+        }
+
+        var saleOrderHeaderToPatch = Mapper.MapEntityDtoToUpdateDto(entity);
+
+        patchDocument.ApplyTo(saleOrderHeaderToPatch);
+
+        var updatedEntity = Mapper.UpdateEntityWithDto(saleOrderHeaderToPatch, entity);
 
         var dbUpdatedEntity = _salesOrderRepository.Update(updatedEntity);
 
@@ -83,7 +111,7 @@ public class SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRep
             return false;
         }
 
-        var deletedEntity = _salesOrderRepository.Delete(entityToBeDeleted);
+        _ = _salesOrderRepository.Delete(entityToBeDeleted);
 
         var hasDeleted = await _salesOrderRepository.SaveChangesAsync(cancellationToken);
 

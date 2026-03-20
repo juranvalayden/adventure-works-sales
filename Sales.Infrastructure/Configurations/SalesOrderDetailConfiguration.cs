@@ -9,7 +9,8 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
 {
     public void Configure(EntityTypeBuilder<SalesOrderDetail> builder)
     {
-        builder.ToTable("SalesOrderDetail", "SalesLT");
+        builder.ToTable("SalesOrderDetail", "SalesLT", 
+            tb => tb.UseSqlOutputClause(false));
 
         builder.HasKey(d => d.Id)
             .HasName("PK_SalesOrderDetail");
@@ -17,13 +18,7 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
         builder.Property(d => d.Id)
             .HasColumnName("SalesOrderDetailID")
             .HasColumnType("int")
-            .ValueGeneratedOnAdd(); // Identity column
-
-        //builder.Property(d => d.Id)
-        //    .HasColumnName("SalesOrderDetailID")
-        //    .HasColumnType("int")
-        //    .ValueGeneratedOnAdd()
-        //    .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            .ValueGeneratedOnAdd();
 
         builder.Property(d => d.SalesOrderHeaderId)
             .HasColumnName("SalesOrderID")
@@ -63,7 +58,6 @@ public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrder
             .HasPrecision(7)
             .HasDefaultValueSql("getdate()");
 
-        // Relationship back to SalesOrderHeader
         builder.HasOne(d => d.SalesOrderHeader)
             .WithMany(h => h.SalesOrderDetails)
             .HasForeignKey(d => d.SalesOrderHeaderId);

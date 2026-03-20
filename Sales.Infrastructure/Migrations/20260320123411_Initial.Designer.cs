@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales.Infrastructure.Configurations.Persistence;
 
@@ -11,9 +12,11 @@ using Sales.Infrastructure.Configurations.Persistence;
 namespace Sales.Infrastructure.Migrations
 {
     [DbContext(typeof(SalesDbContext))]
-    partial class SalesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260320123411_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -97,6 +100,8 @@ namespace Sales.Infrastructure.Migrations
                     b.HasIndex("SalesOrderHeaderId");
 
                     b.ToTable("SalesOrderDetail", "SalesLT");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Sales.Domain.Entities.SalesOrderHeader", b =>
@@ -237,6 +242,8 @@ namespace Sales.Infrastructure.Migrations
                     b.HasIndex("ShipToAddressId");
 
                     b.ToTable("SalesOrderHeader", "SalesLT");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Sales.Domain.Entities.SalesOrderHeaderTaken", b =>

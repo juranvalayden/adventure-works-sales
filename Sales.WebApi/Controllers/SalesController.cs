@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
+using Sales.Application.Mappers;
 
 namespace Sales.WebApi.Controllers;
 
@@ -64,7 +66,7 @@ public class SalesController : ControllerBase
             {
                 createdSalesOrderHeaderDto.Id
             };
-            
+
             return CreatedAtRoute(_getByIdRouteName, routeValues, createdSalesOrderHeaderDto);
         }
         catch (Exception e)
@@ -75,12 +77,56 @@ public class SalesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<SalesOrderHeaderDto>> UpdateSalesOrderHeaderAsync(int id, SalesOrderHeaderForUpdateDto salesOrderHeaderForUpdateDto, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<SalesOrderHeaderDto>> PutSalesOrderHeaderAsync(int id, SalesOrderHeaderForUpdateDto salesOrderHeaderForUpdateDto, CancellationToken cancellationToken = default)
     {
-        var updatedSalesOrderHeaderDto = await _salesOrderService.UpdateSalesOrderHeaderAsync(id, salesOrderHeaderForUpdateDto, cancellationToken);
+        try
+        {
+            var updatedSalesOrderHeaderDto = await _salesOrderService.UpdateSalesOrderHeaderAsync(id, salesOrderHeaderForUpdateDto, cancellationToken);
 
-        if (updatedSalesOrderHeaderDto == null) return BadRequest();
+            if (updatedSalesOrderHeaderDto == null) return BadRequest();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred in the API when (put) updating sales order header by {Id}.", id);
+            return BadRequest();
+        }
+    }
+
+    [HttpPatch("{id:int}")]
+    public async Task<ActionResult<SalesOrderHeaderDto>> PatchSalesOrderHeaderAsync(int id, JsonPatchDocument<SalesOrderHeaderForUpdateDto> patchDocument, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var updatedSalesOrderHeaderDto = await _salesOrderService.PatchDocumentAsync(id, patchDocument, cancellationToken);
+
+            if (updatedSalesOrderHeaderDto == null) return BadRequest();
+
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred in the API when (patch) updating sales order header by {Id}.", id);
+            return BadRequest();
+        }
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult> DeleteSalesOrderHeaderAsync(int id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var hasDeleted = await _salesOrderService.DeleteSalesOrderHeaderAsync(id, cancellationToken);
+
+            if (!hasDeleted) return BadRequest();
+
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred in the API when deleting sales order header by {Id}.", id);
+            return BadRequest();
+        }
     }
 }

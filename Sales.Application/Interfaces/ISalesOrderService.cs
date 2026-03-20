@@ -1,4 +1,5 @@
-﻿using Sales.Application.Dtos;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Sales.Application.Dtos;
 
 namespace Sales.Application.Interfaces;
 
@@ -11,6 +12,9 @@ public interface ISalesOrderService
         CancellationToken cancellationToken = default);
 
     Task<SalesOrderHeaderDto?> UpdateSalesOrderHeaderAsync(int id, SalesOrderHeaderForUpdateDto salesOrderHeaderForUpdateDto, CancellationToken cancellationToken = default);
-    
+
+    Task<SalesOrderHeaderDto?> PatchDocumentAsync(int id, JsonPatchDocument<SalesOrderHeaderForUpdateDto> patchDocument,
+        CancellationToken cancellationToken = default);
+
     Task<bool> DeleteSalesOrderHeaderAsync(int id, CancellationToken cancellationToken = default);
 }

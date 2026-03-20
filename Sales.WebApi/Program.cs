@@ -8,7 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.RabbitMq));
 
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+
+builder.Services.AddControllers(options =>
+    {
+        options.ReturnHttpNotAcceptable = true;
+    })
+    .AddNewtonsoftJson()
+    .AddXmlDataContractSerializerFormatters();
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddApplication(builder.Configuration);
