@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
-using Sales.Application.Mappers;
 using System.Text.Json;
 
 namespace Sales.WebApi.Controllers;
@@ -32,8 +31,12 @@ public class SalesController : ControllerBase
             var (salesOrderHeaderDtos, paginationMetadata) = await _salesOrderService
                 .GetSalesOrderHeadersAsync(salesOrderNumber, pageNumber, pageSize, cancellationToken);
 
-            Response.Headers.Add("X-Pagination",
-                JsonSerializer.Serialize(paginationMetadata));
+            var paginationKey = JsonSerializer.Serialize(paginationMetadata);
+
+            if (string.IsNullOrWhiteSpace(paginationKey))
+                return BadRequest("No pagination metadata available.");
+
+            Response.Headers["X-Pagination"] = paginationKey;
 
             return Ok(salesOrderHeaderDtos);
         }

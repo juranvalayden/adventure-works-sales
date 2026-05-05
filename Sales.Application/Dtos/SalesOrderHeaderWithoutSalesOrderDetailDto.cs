@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Sales.Application.Dtos;
+﻿namespace Sales.Application.Dtos;
 
 public class SalesOrderHeaderWithoutSalesOrderDetailDto
 {
