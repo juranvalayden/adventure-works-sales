@@ -5,7 +5,6 @@ using Sales.Application.Common.Helpers;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Services;
-using Sales.Application.Services.Background;
 
 namespace Sales.Application;
 

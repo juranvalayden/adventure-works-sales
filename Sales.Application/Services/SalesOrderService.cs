@@ -4,6 +4,7 @@ using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Mappers;
 using Sales.Domain.Interfaces;
+using Sales.Domain.Pagination;
 
 namespace Sales.Application.Services;
 
@@ -24,6 +25,23 @@ public class SalesOrderService(ILogger<SalesOrderService> logger, ISalesOrderRep
         {
             _logger.LogError(e, "Error occurred GetAllAsync");
             return new List<SalesOrderHeaderDto>();
+        }
+    }
+
+    public async Task<(IEnumerable<SalesOrderHeaderDto>, PaginationMetadata)> GetSalesOrderHeadersAsync(string? salesOrderNumber, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var (entities, paginationMetadata) = await _salesOrderRepository
+                .GetSalesOrderHeadersAsync(salesOrderNumber, pageNumber, pageSize, cancellationToken);
+
+            return (Mapper.MapFromEntitiesToDtos(entities), paginationMetadata);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error occurred GetAllAsync");
+            return new ValueTuple<IEnumerable<SalesOrderHeaderDto>, PaginationMetadata>([], new PaginationMetadata(0, 0, 0));
         }
     }
 

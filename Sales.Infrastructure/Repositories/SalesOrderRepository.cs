@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Sales.Domain.Entities;
 using Sales.Domain.Interfaces;
+using Sales.Domain.Pagination;
 using Sales.Infrastructure.Configurations.Persistence;
 
 namespace Sales.Infrastructure.Repositories;
@@ -25,6 +26,30 @@ public class SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesDbC
             _logger.LogError(e, "Error occurred getting all sales order headers from the db.");
             throw;
         }
+    }
+
+    public async Task<(IEnumerable<SalesOrderHeader>, PaginationMetadata)> GetSalesOrderHeadersAsync(string? salesOrderNumber, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<SalesOrderHeader> collection = _salesDbContext.SalesOrderHeaders;
+
+        if (!string.IsNullOrWhiteSpace(salesOrderNumber))
+        {
+            salesOrderNumber = salesOrderNumber.Trim();
+            collection = collection.Where(s => s.SalesOrderNumber.Contains(salesOrderNumber));
+        }
+
+        var totalItemCount = await collection.CountAsync(cancellationToken: cancellationToken);
+
+        var paginationMetadata = new PaginationMetadata(totalItemCount, pageSize, pageNumber);
+
+        var collectionToReturn = await collection
+            .OrderBy(c => c.SalesOrderNumber)
+            .Skip(pageSize * (pageNumber - 1))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new ValueTuple<IEnumerable<SalesOrderHeader>, PaginationMetadata>(collectionToReturn, paginationMetadata);
     }
 
     public async Task<SalesOrderHeader?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

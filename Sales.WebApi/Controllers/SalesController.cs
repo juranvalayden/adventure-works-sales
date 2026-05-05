@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Mappers;
+using System.Text.Json;
 
 namespace Sales.WebApi.Controllers;
 
@@ -13,6 +14,7 @@ public class SalesController : ControllerBase
     private readonly ILogger<SalesController> _logger;
     private readonly ISalesOrderService _salesOrderService;
     private const string _getByIdRouteName = "GetSalesOrderHeaderById";
+    private const int _maxPageSize = 20;
 
     public SalesController(ILogger<SalesController> logger, ISalesOrderService salesOrderService)
     {
@@ -21,11 +23,18 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SalesOrderHeaderDto>>> GetSalesOrderHeadersAsync(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IEnumerable<SalesOrderHeaderDto>>> GetSalesOrderHeadersAsync(string? salesOrderNumber, int pageNumber = 1, int pageSize = _maxPageSize, CancellationToken cancellationToken = default)
     {
         try
         {
-            var salesOrderHeaderDtos = await _salesOrderService.GetSalesOrderHeadersAsync(cancellationToken);
+            if (pageSize > _maxPageSize) pageSize = _maxPageSize;
+
+            var (salesOrderHeaderDtos, paginationMetadata) = await _salesOrderService
+                .GetSalesOrderHeadersAsync(salesOrderNumber, pageNumber, pageSize, cancellationToken);
+
+            Response.Headers.Add("X-Pagination",
+                JsonSerializer.Serialize(paginationMetadata));
+
             return Ok(salesOrderHeaderDtos);
         }
         catch (Exception e)
