@@ -4,7 +4,7 @@ using Sales.Domain.Entities;
 
 namespace Sales.Infrastructure.Configurations;
 
-public class SalesOrderHeaderTakenConfiguration : IEntityTypeConfiguration<SalesOrderHeaderTaken>
+internal class SalesOrderHeaderTakenConfiguration : IEntityTypeConfiguration<SalesOrderHeaderTaken>
 {
     public void Configure(EntityTypeBuilder<SalesOrderHeaderTaken> builder)
     {

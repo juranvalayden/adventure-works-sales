@@ -5,7 +5,7 @@ using Sales.Domain.Entities;
 
 namespace Sales.Infrastructure.Configurations;
 
-public class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrderDetail>
+internal class SalesOrderDetailConfiguration : IEntityTypeConfiguration<SalesOrderDetail>
 {
     public void Configure(EntityTypeBuilder<SalesOrderDetail> builder)
     {

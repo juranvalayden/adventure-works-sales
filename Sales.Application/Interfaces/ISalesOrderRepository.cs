@@ -1,7 +1,7 @@
 ﻿using Sales.Domain.Entities;
 using Sales.Domain.Pagination;
 
-namespace Sales.Domain.Interfaces;
+namespace Sales.Application.Interfaces;
 
 public interface ISalesOrderRepository
 {
@@ -14,7 +14,9 @@ public interface ISalesOrderRepository
     Task<SalesOrderHeader?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     SalesOrderHeader Add(SalesOrderHeader entityForCreation);
+
     SalesOrderHeader Update(SalesOrderHeader entity);
+
     SalesOrderHeader Delete(SalesOrderHeader entityForDeletion);
 
     Task<bool> SaveChangesAsync(CancellationToken cancellationToken = default);

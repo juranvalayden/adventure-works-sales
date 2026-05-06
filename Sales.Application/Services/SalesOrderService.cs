@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Mappers;
-using Sales.Domain.Interfaces;
 using Sales.Domain.Pagination;
 
 namespace Sales.Application.Services;

@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sales.Domain.Interfaces;
+using Sales.Application.Interfaces;
 using Sales.Infrastructure.Configurations.Persistence;
 using Sales.Infrastructure.Repositories;
 

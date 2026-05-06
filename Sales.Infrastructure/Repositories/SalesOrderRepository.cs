@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sales.Application.Interfaces;
 using Sales.Domain.Entities;
-using Sales.Domain.Interfaces;
 using Sales.Domain.Pagination;
 using Sales.Infrastructure.Configurations.Persistence;
 
 namespace Sales.Infrastructure.Repositories;
 
-public class SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesDbContext salesDbContext) : ISalesOrderRepository
+internal class SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesDbContext salesDbContext) : ISalesOrderRepository
 {
     private readonly ILogger<SalesOrderRepository> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly SalesDbContext _salesDbContext = salesDbContext ?? throw new ArgumentNullException(nameof(salesDbContext));

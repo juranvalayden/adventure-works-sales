@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
-using System.Text.Json;
 
 namespace Sales.WebApi.Controllers;
 

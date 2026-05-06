@@ -4,7 +4,7 @@ using Sales.Domain.Entities;
 
 namespace Sales.Infrastructure.Configurations;
 
-public class SalesOrderHeaderConfiguration : IEntityTypeConfiguration<SalesOrderHeader>
+internal class SalesOrderHeaderConfiguration : IEntityTypeConfiguration<SalesOrderHeader>
 {
     public void Configure(EntityTypeBuilder<SalesOrderHeader> builder)
     {
