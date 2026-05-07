@@ -17,7 +17,9 @@ public static class DependencyInjection
     {
         services.AddSingleton<SerializationWrapper>();
 
-        // services.Configure<CacheSettingsOptions>(configuration.GetSection(nameof(CacheSettingsOptions)));
+        // Add services to the container.
+        services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.RabbitMq));
+        services.Configure<SalesCachingOptions>(configuration.GetSection(nameof(SalesCachingOptions.CacheSettingOptions)));
 
         services.AddMemoryCache();
 
