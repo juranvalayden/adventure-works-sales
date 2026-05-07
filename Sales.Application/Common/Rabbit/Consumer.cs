@@ -5,7 +5,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Sales.Application.Interfaces;
 
-namespace Sales.Application.Common.Helpers;
+namespace Sales.Application.Common.Rabbit;
 
 public class Consumer<T>(ILogger<Consumer<T>> logger, IConnectionFactory connectionFactory, SerializationWrapper serializationWrapper)
     : IConsumer<T> where T : class

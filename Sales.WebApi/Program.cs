@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.RabbitMq));
+builder.Services.Configure<SalesCachingOptions>(builder.Configuration.GetSection(nameof(SalesCachingOptions.CacheSettingOptions)));
 
 builder.Services.AddOpenApi();
 

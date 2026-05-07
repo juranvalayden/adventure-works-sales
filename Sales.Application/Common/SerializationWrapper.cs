@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Sales.Application.Common.Helpers;
+namespace Sales.Application.Common;
 
 public class SerializationWrapper
 {

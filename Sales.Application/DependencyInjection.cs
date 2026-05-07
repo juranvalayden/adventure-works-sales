@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
-using Sales.Application.Common.Helpers;
+using Sales.Application.Common;
+using Sales.Application.Configurations;
 using Sales.Application.Dtos;
 using Sales.Application.Interfaces;
 using Sales.Application.Services;
+using Sales.Application.Services.Background;
 
 namespace Sales.Application;
 
@@ -13,6 +16,13 @@ public static class DependencyInjection
     public static void AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<SerializationWrapper>();
+
+        // services.Configure<CacheSettingsOptions>(configuration.GetSection(nameof(CacheSettingsOptions)));
+
+        services.AddMemoryCache();
+
+        services.AddSingleton<ICacheService, MemoryCacheService>();
+        services.AddSingleton(new Meter("salesorders.api", "1.0.0"));
 
         var hostName = configuration["RabbitMQ:HostName"];
         if (string.IsNullOrWhiteSpace(hostName)) hostName = "localhost";
@@ -44,6 +54,7 @@ public static class DependencyInjection
         services.AddSingleton<IConsumer<SalesOrderHeaderDto>, SalesOrderConsumerService>();
 
         // Background services
+        services.AddHostedService<SalesCacheBackgroundService>();
         // services.AddHostedService<SalesPublisherBackgroundService>();
         // services.AddHostedService<SalesConsumerBackgroundService>();
     }

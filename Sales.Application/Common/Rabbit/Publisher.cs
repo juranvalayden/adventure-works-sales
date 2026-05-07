@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using Sales.Application.Interfaces;
 
-namespace Sales.Application.Common.Helpers;
+namespace Sales.Application.Common.Rabbit;
 
 public class Publisher<T>(ILogger<Publisher<T>> logger, IConnectionFactory connectionFactory, SerializationWrapper serializationWrapper)
     : IPublisher<T> where T : class

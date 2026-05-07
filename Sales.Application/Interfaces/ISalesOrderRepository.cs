@@ -15,7 +15,7 @@ public interface ISalesOrderRepository
 
     SalesOrderHeader Add(SalesOrderHeader entityForCreation);
 
-    SalesOrderHeader Update(SalesOrderHeader entity);
+    SalesOrderHeader Update(SalesOrderHeader entityForUpdate);
 
     SalesOrderHeader Delete(SalesOrderHeader entityForDeletion);
 

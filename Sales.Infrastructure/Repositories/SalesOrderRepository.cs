@@ -75,11 +75,11 @@ internal class SalesOrderRepository(ILogger<SalesOrderRepository> logger, SalesD
             .Entity;
     }
 
-    public SalesOrderHeader Update(SalesOrderHeader entity)
+    public SalesOrderHeader Update(SalesOrderHeader entityForUpdate)
     {
         return _salesDbContext
             .SalesOrderHeaders
-            .Update(entity)
+            .Update(entityForUpdate)
             .Entity;
     }
 
